@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Table from 'react-bootstrap/Table';
 import ServerDetails from './components/ServerDetils'
+import UsageDetails from './components/UsageDetails'
 function Home() {
   return (
     <>
@@ -17,7 +18,7 @@ function Home() {
       <Container>
           <Col>
             <Row>
-              Another section
+              <UsageDetails/>
             </Row>
           </Col>
           <Col>
@@ -31,3 +32,5 @@ function Home() {
 }
 
 export default Home;
+
+
