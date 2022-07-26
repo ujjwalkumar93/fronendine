@@ -19,7 +19,9 @@ const ServerDetails = () => {
     const [ip, setIp] = useState(null)
     const [serverStatus, setServerStatus] = useState(true)
 
-
+    useEffect(() => {
+        console.log("setServerStatus: ",serverStatus)
+    })
     const handleClose = () => setShowForm(false);
     const handleShow = () => setShowForm(true);
 

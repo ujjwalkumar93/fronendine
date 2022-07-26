@@ -16,16 +16,16 @@ function Home() {
         </Container>
       </Navbar>
       <Container>
-          <Col>
-            <Row>
+          <Row>
+            <Col>
               <UsageDetails/>
-            </Row>
-          </Col>
-          <Col>
-            <Row>
+            </Col>
+          </Row>
+          <Row style={{marginBottom:30}}>
+            <Col>
               <ServerDetails/>
-            </Row>
-          </Col>
+            </Col>
+          </Row>
       </Container>
     </>
   );

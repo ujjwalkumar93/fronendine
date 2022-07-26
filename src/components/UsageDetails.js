@@ -20,6 +20,7 @@ const UsageDetails = () => {
     endDate1.setDate(endDate1.getDate() + 2);
     const [endDate, setEndDate] = useState(endDate1);
     console.log("new Date()+3 is: ", endDate1)
+    const [resp, setResp] = useState([])
     useEffect(() => {
         fetch('http://localhost:8000/api/server/list',{method:"GET"})
         .then(resp => {return resp.json()})
@@ -27,6 +28,7 @@ const UsageDetails = () => {
             if(data.message){
                 setIpList(data.message)
                 console.log("running",data.message)
+                setResp([...data.message])
             }
         })
     },[])
@@ -149,7 +151,7 @@ const UsageDetails = () => {
                         <div>
                             <Carousel variant="dark">
                             <Carousel.Item>
-                            <CpuChart/>
+                            <CpuChart data = {resp}/>
                                 
                             </Carousel.Item>
                             <Carousel.Item>
