@@ -21,7 +21,7 @@ const ServerDetails = () => {
 
     useEffect(() => {
         console.log("setServerStatus: ",serverStatus)
-    })
+    },[])
     const handleClose = () => setShowForm(false);
     const handleShow = () => setShowForm(true);
 
