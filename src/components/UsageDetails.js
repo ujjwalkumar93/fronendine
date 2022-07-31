@@ -7,7 +7,33 @@ import Carousel from 'react-bootstrap/Carousel';
 import { AiOutlineSetting } from 'react-icons/ai';
 import Button from 'react-bootstrap/Button';
 import formatDate from './utils'
+import { Line } from 'react-chartjs-2';
 
+
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+  } from 'chart.js';
+  import Skeleton from 'react-loading-skeleton'
+  import 'react-loading-skeleton/dist/skeleton.css'
+
+
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+  );
+  
 const UsageDetails = () => {
     const [isListView, setIsListView] = useState(false)
     const [ipList , setIpList] = useState([])
@@ -17,6 +43,9 @@ const UsageDetails = () => {
 
     const [fromDate, setFromDate] = useState()
     const [toDate, setToDate] = useState()
+    const [cpuReport,setCpuReport] = useState(null)
+    const [diskReport,setDiskReport] = useState(null)
+    const [memoryReport,setMemoryReport] = useState(null)
 
     useEffect(() => {
         console.log("filterData : ", toDate, fromDate)
@@ -41,10 +70,7 @@ const UsageDetails = () => {
             }
         })
     },[])
-    useEffect(() => {
-        console.log("todate: ", toDate)
-        console.log("from date: ", fromDate)
-    },[fromDate, toDate])
+
     const handleView = () => {
         const value = !isListView
         setIsListView(value)
@@ -60,31 +86,104 @@ const UsageDetails = () => {
             setSelectedIp([...res])
         }
     }
+
     useEffect(() => {
-        console.log("selectedIp: ", selectedIp)
-    },[selectedIp])
+        ["cpu", "disk", "memory"].map(i => {
+            fetch(`http://localhost:8000/api/usage/${i}`,{
+            method:"POST",
+            headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"ipList" : ipList.map(i => {
+                return i.ip
+            }) })
+            })
+            .then(resp => {return resp.json()})
+            .then(data => {
+                if(data.message){
+                    if(i === "cpu"){
+                        setCpuReport(data.message)
+                    }
+                    if(i === "memory"){
+                        setMemoryReport(data.message)
+                    }
+                    if(i === "disk"){
+                        setDiskReport(data.message)
+                    }
+                    
+                }
+            })
+        })
+        
+    },[ipList])
 
     const handleSubmit = () => {
-        const d = [formatDate(fromDate),formatDate(toDate),selectedIp]
         setFilterData({ip:selectedIp})
         setShow(false)
-        // fetch('http://localhost:8000/api/usage/cpu',{
-        //     method:"POST",
-        //     headers: {
-        //         'Accept': 'application/json',
-        //         'Content-Type': 'application/json'
-        //       },
-        //     body: JSON.stringify({"ipList": selectedIp, "fromDate": fromDate, "toDate": toDate})
-        // })
-        // .then(resp => {return resp.json()})
-        // .then(data => {
-        //     if(data.message){
-        //         setIpList(data.message)
-        //         console.log("running..",data.message)
-        //     }
-        // })
-        // console.log("data is: ", fromDate, toDate, selectedIp)
+        const listOfIp = ["cpu", "disk", "memory"]
+        listOfIp.map(i => {
+            fetch(`http://localhost:8000/api/usage/${i}`,{
+            method:"POST",
+            headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({"ipList" : selectedIp})
+            })
+            .then(resp => {return resp.json()})
+            .then(data => {
+                if(data.message){
+                    if(i === "cpu"){
+                        setCpuReport(data.message)
+                    }
+                    if(i === "memory"){
+                        setMemoryReport(data.message)
+                    }
+                    if(i === "disk"){
+                        setDiskReport(data.message)
+                    }
+                    
+                }
+            })
+        })
     }
+    // useEffect(() => {
+    //     console.log(".....",selectedIp)
+    // },[selectedIp])
+    const reportLabel = {
+        cpu : "CPU Usage",
+        disk : "Disk Usage",
+        memory : "Memory Usage"
+      }
+    let optionList = []
+    const r = ["cpu", "disk", "memory"]
+    r.forEach(i => {
+        optionList.push(
+            {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                  title: {
+                    display: true,
+                    text: reportLabel[i],
+                  },
+                  scales: {
+                    xAxes: [{
+                      type: 'time',
+                      }]
+                  },
+                },
+            }
+        
+        )
+    })
+
+    
+
     const chartList = ["cpu","memory","disk"]
     return(
         <div style={{marginTop:8, padding:20}}>
@@ -151,27 +250,28 @@ const UsageDetails = () => {
                 {
                     !isListView ? (
                         <Carousel style={{width:"1200px", padding:"100"}}>
-                        {
-                            chartList.map(i => {
-                                return (
-                                    <Carousel.Item>
-                                        <PrepareChart reportName={i} filter={filterData}/>
-                                    </Carousel.Item>
-                                )
-                            })
-                        }
+                            <Carousel.Item>
+                                {cpuReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[0]} data={cpuReport} />)}
+                            </Carousel.Item>
+                            <Carousel.Item> 
+                                {diskReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[1]} data={diskReport} />)}
+                            </Carousel.Item>
+                            <Carousel.Item>
+                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={diskReport} />)}
+                            </Carousel.Item> 
+
                         </Carousel>
                     ):(
-                        <div>
-                            {
-                                chartList.map(i => {
-                                    return(
-                                        <div>
-                                            <PrepareChart reportName={i} filter={filterData}/>
-                                        </div>
-                                    )
-                                })
-                            }
+                       <div>
+                            <div>
+                                {cpuReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[0]} data={cpuReport} />)}
+                            </div>
+                            <div>
+                                {diskReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[1]} data={diskReport} />)}
+                            </div>
+                            <div>
+                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={diskReport} />)}
+                            </div>
                         </div>
                     )
                 }
@@ -180,11 +280,5 @@ const UsageDetails = () => {
         </div>
     )
 }
-// function format(inputDate) {
-//     var date = new Date(inputDate);
-//     if (!isNaN(date.getTime())) {
-//         // Months use 0 index.
-//         return date.getMonth() + 1 + '/' + date.getDate() + '/' + date.getFullYear();
-//     }
-// }
+
 export default UsageDetails;
