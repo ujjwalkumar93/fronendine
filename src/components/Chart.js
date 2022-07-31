@@ -9,6 +9,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 //import zoom from 'chartjs-plugin-zoom'
 import { useEffect, useState, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -50,55 +52,44 @@ export const options = {
 };
 
 const PrepareChart = (props) => {
-  console.log("filter and name", props.filter, props.name)
-  const [reportData, setReportData] = useState([])
-
+  // console.log("filter and name", props.filter, props.name)
+  const [reportData, setReportData] = useState(null)
   useEffect(() => {
-    fetch('http://localhost:8000/api/server/105.109.12.36',{method:"GET"})
+    setReportData(null)
+    fetch(`http://localhost:8000/api/usage/${props.reportName}`,{
+      method:"POST",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({"ipList" : ["105.109.12.47","105.109.12.45"]})
+    })
     .then(resp => {return resp.json()})
     .then(data => {
+      //console.log("+++++++++++++++++++++++=")
         if(data.message){
-            setReportData(data.message)
-            console.log("msg is: ", data.message)
-            
+          setReportData(data.message)
         }
     })
 },[])
-  const labels = reportData.map(d => {
-    return moment(d.addedOn).format('DD/MM/YYYY h:mm:ss')
-  })
-  let filteredData;
-  if(props.reportName === "cpu"){
-    filteredData = labels.map((v,i) => {
-      return reportData[i].cpu
-    })
-  }
-  if(props.reportName === "disk"){
-    filteredData = labels.map((v,i) => {
-      return reportData[i].disk
-    })
-  }
-  if(props.reportName === "memory"){
-    filteredData = labels.map((v,i) => {
-      return reportData[i].memory
-    })
-  }
 
-  const data1 = {
-    labels,
-    datasets: [
-      {
-        label: 'Dataset 1',
-        data: filteredData,
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        borderWidth:.5,
-      }]
+const labels = [1,2,3]
+const data1 = {
+      labels,
+      datasets: [
+        {
+          label: 'Dataset 1',
+          data: [1,2,3],
+          borderColor: 'rgb(255, 99, 132)',
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          borderWidth:.5,
+        }]
+  
+    }
 
-  }
   return (
     <div className="App">
-     <Line options={options} data={data1} />
+     {reportData === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={options} data={reportData} />)}
     </div>
   );
 }
