@@ -10,7 +10,7 @@ const moment = require('moment');
 
 
 const ServerDetails = () => {
-    const [server, setServer] = useState(null)
+    const [server, setServer] = useState()
     const [showAlert, setShowAlert] = useState({show:false});
     const [show, setShow] = useState(false);
 
@@ -18,12 +18,13 @@ const ServerDetails = () => {
     const [serverName, setServerName] = useState(null)
     const [ip, setIp] = useState(null)
     const [serverStatus, setServerStatus] = useState(true)
+    const [showDuplicate, setShowDuplicate] = useState(false)
 
     const handleClose = () => setShowForm(false);
-    const handleShow = () => setShowForm(true);
+    // const handleShow = () => setShowForm(true);
 
     const handleSave = (ipValue, serverNameValue) => {
-        const url = `http://localhost:8000/api/server/update/${ipValue}`
+        const url = `${process.env.REACT_APP_BASE_URL}/api/server/update/${ipValue}`
         let status = true
         if(serverStatus === 'false') {
             status = false
@@ -45,24 +46,32 @@ const ServerDetails = () => {
             })
         }
         if(showForm.action === "create") {
-            fetch("http://localhost:8000/api/server/add",{
+            console.log("server and ip: ", ip, server)
+            const existingServer = server.map(i => {
+                return i.ip
+            })
+            if(existingServer.includes(ip)){
+                setShowDuplicate(true)
+            } else {
+                fetch(`${process.env.REACT_APP_BASE_URL}/api/server/add`,{
                 method:"POST",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                   },
                 body: JSON.stringify({"serverName": serverName, "serverStatus": serverStatus, "ip" : ip})
-            })
-            .then(resp => {return resp.json()})
-            .then(data => {
-                if(data.message){
-                    console.log(data.message)
-                }
-            })
+                })
+                .then(resp => {return resp.json()})
+                .then(data => {
+                    if(data.message){
+                        console.log(data.message)
+                    }
+                })
+            }
         }
         
         handleClose()
-        fetch('http://localhost:8000/api/server/list',{method:"GET"})
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/server/list`,{method:"GET"})
         .then(resp => {return resp.json()})
         .then(data => {
             if(data.message){
@@ -72,9 +81,8 @@ const ServerDetails = () => {
 
     }
 
-
     useEffect(() => {
-        fetch('http://localhost:8000/api/server/list',{method:"GET"})
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/server/list`,{method:"GET"})
         .then(resp => {return resp.json()})
         .then(data => {
             if(data.message){
@@ -84,7 +92,7 @@ const ServerDetails = () => {
     },[server])
     const DeleteOperation = (ip) => {
         setShowAlert({"show":false})
-        const url = `http://localhost:8000/api/server/delete/${ip}`
+        const url = `${process.env.REACT_APP_BASE_URL}/api/server/delete/${ip}`
         fetch(url,{method:"DELETE"})
         .then(resp => {return resp.json()})
         .then(data => {
@@ -127,14 +135,12 @@ const ServerDetails = () => {
                                 defaultValue={showForm.ip }
                                 disabled={showForm.ip ? true : false}
                                 onChange={e => {setIp(e.target.value)}}
-                                //onLoad = {e => {setIp(e.target.value)}}
                             />
                         </Form.Group>
                         <Form.Group className="mb-3" controlId="status">
                             <Form.Label>Status</Form.Label>
                             <Form.Select 
                                 defaultValue={showForm.status}
-                                //onChange={e => {console.log("selected........")}}
                                 onChange={e => {setServerStatus(e.target.value)}}
                             >
                                 <option value={true}>Active</option>
@@ -165,6 +171,16 @@ const ServerDetails = () => {
                 </Button>
                 <Button onClick={() => DeleteOperation(showAlert.ip)} variant="outline-danger" style={{marginLeft:"12px"}}>
                     Delete
+                </Button>
+                </div>
+            </Alert>
+            <Alert show={showDuplicate} variant="danger">
+                <Alert.Heading>Please check the data again</Alert.Heading>
+                <p>{ip} is already present in db! please choose another ip</p>
+                <hr />
+                <div className="d-flex justify-content-end">
+                <Button onClick={() => setShowDuplicate(false)} variant="outline-primary">
+                    Close
                 </Button>
                 </div>
             </Alert>

@@ -52,7 +52,7 @@ const UsageDetails = () => {
     //const [endDate, setEndDate] = useState(endDate1);
     const [resp, setResp] = useState([])
     useEffect(() => {
-        fetch('http://localhost:8000/api/server/list',{method:"GET"})
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/server/list`,{method:"GET"})
         .then(resp => {return resp.json()})
         .then(data => {
             if(data.message){
@@ -87,7 +87,7 @@ const UsageDetails = () => {
 
     useEffect(() => {
         ["cpu", "disk", "memory"].map(i => {
-            fetch(`http://localhost:8000/api/usage/${i}`,{
+            fetch(`${process.env.REACT_APP_BASE_URL}/api/usage/${i}`,{
             method:"POST",
             headers: {
             'Accept': 'application/json',
@@ -131,7 +131,7 @@ const UsageDetails = () => {
             })
         }
         listOfIp.map(i => {
-            fetch(`http://localhost:8000/api/usage/${i}`,{
+            fetch(`${process.env.REACT_APP_BASE_URL}/api/usage/${i}`,{
             method:"POST",
             headers: {
             'Accept': 'application/json',
@@ -156,7 +156,6 @@ const UsageDetails = () => {
             })
         })
     }
-   
     const reportLabel = {
         cpu : "CPU Usage",
         disk : "Disk Usage",
@@ -263,7 +262,7 @@ const UsageDetails = () => {
                                 {diskReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[1]} data={diskReport} />)}
                             </Carousel.Item>
                             <Carousel.Item>
-                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={diskReport} />)}
+                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={memoryReport} />)}
                             </Carousel.Item> 
 
                         </Carousel>
@@ -276,7 +275,7 @@ const UsageDetails = () => {
                                 {diskReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[1]} data={diskReport} />)}
                             </div>
                             <div>
-                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={diskReport} />)}
+                                {memoryReport === null ? (<Skeleton count={3}  height={100} enableAnimation={true}/>) : (<Line options={optionList[2]} data={memoryReport} />)}
                             </div>
                         </div>
                     )
