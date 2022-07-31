@@ -1,7 +1,7 @@
 const formatDate = (dateObj, formate) => {
     
     const d = new Date(dateObj); 
-    console.log("local string", d.toLocaleString().split(',')[0] ); 
+    //console.log("local string", d.toLocaleString().split(',')[0] ); 
     //return d.toLocaleString().split(',')[0]
 
     if(formate === "yyyy-mm-dd") {

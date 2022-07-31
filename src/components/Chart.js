@@ -27,65 +27,98 @@ ChartJS.register(
   Legend
 );
 
-export const options = {
-  responsive: true,
-  maintainAspectRatio: true,
-  plugins: {
-    legend: {
-      position: 'top',
-    },
-    title: {
-      display: true,
-      text: 'CPU Usage',
-    },
-    scales: {
-      xAxes: [{
-        type: 'time',
-        }]
-    },
-    // zoom: {
-    //   pan :{
-    //     enabled : true
-    //   }
-    // }
-  },
-};
+
 
 const PrepareChart = (props) => {
+  const [filterIp, setFilterIp] = useState([])
+  if(props.filter.ip != null){
+    console.log("##########################")
+    setFilterIp([...props.filter.ip])
+  }
+  
+  console.log("props: ", props)
+  const reportLabel = {
+    cpu : "CPU Usage",
+    disk : "Disk Usage",
+    memory : "Memory Usage"
+  }
+  const options = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: reportLabel[props.reportName],
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          }]
+      },
+    },
+  };
   // console.log("filter and name", props.filter, props.name)
   const [reportData, setReportData] = useState(null)
+  const [ipList, setIpList] = useState([])
   useEffect(() => {
-    setReportData(null)
-    fetch(`http://localhost:8000/api/usage/${props.reportName}`,{
-      method:"POST",
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({"ipList" : ["105.109.12.47","105.109.12.45"]})
-    })
+    fetch('http://localhost:8000/api/server/list',{method:"GET"})
     .then(resp => {return resp.json()})
     .then(data => {
-      //console.log("+++++++++++++++++++++++=")
         if(data.message){
-          setReportData(data.message)
+            const activeIpList = []
+            data.message.forEach(e => {
+                if(e.serverStatus) {
+                    activeIpList.push(e.ip)
+                    setIpList([...activeIpList])
+                }
+            })
         }
     })
-},[])
+  },[])
 
-const labels = [1,2,3]
-const data1 = {
-      labels,
-      datasets: [
-        {
-          label: 'Dataset 1',
-          data: [1,2,3],
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-          borderWidth:.5,
-        }]
   
+  
+  useEffect(() => {
+    if(props.filter.ip){
+      fetch(`http://localhost:8000/api/usage/${props.reportName}`,{
+        method:"POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({"ipList" : props.filter.ip })
+      })
+      .then(resp => {return resp.json()})
+      .then(data => {
+          if(data.message){
+            setReportData(data.message)
+          }
+      })
+    } else {
+      fetch(`http://localhost:8000/api/usage/${props.reportName}`,{
+        method:"POST",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({"ipList" : ipList })
+      })
+      .then(resp => {return resp.json()})
+      .then(data => {
+          if(data.message){
+            setReportData(data.message)
+          }
+      })
     }
+    
+},[ipList])
+
+console.log("filterIp is: ", filterIp)
+
+
 
   return (
     <div className="App">

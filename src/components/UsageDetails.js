@@ -3,9 +3,7 @@ import Form from 'react-bootstrap/Form';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useEffect, useState, useMemo } from 'react';
 import PrepareChart from './Chart';
-import MemoryDetails from './MemoryChart'
 import Carousel from 'react-bootstrap/Carousel';
-import DiskDetails from './DiskChart'
 import { AiOutlineSetting } from 'react-icons/ai';
 import Button from 'react-bootstrap/Button';
 import formatDate from './utils'
@@ -13,12 +11,16 @@ import formatDate from './utils'
 const UsageDetails = () => {
     const [isListView, setIsListView] = useState(false)
     const [ipList , setIpList] = useState([])
-    const [fromDate, setFromDate] = useState(formatDate(new Date,"yyyy-mm-dd"));
-    const [toDate, setToDate] = useState(formatDate(new Date,"yyyy-mm-dd"));
     const [show,setShow] = useState(false)
     const [selectedIp, setSelectedIp] = useState([])
+    const [filterData, setFilterData] = useState({ip: null})
 
-    formatDate(new Date())
+    const [fromDate, setFromDate] = useState()
+    const [toDate, setToDate] = useState()
+
+    useEffect(() => {
+        console.log("filterData : ", toDate, fromDate)
+    }, [toDate,fromDate])
 
     //const [endDate, setEndDate] = useState(endDate1);
     const [resp, setResp] = useState([])
@@ -27,14 +29,22 @@ const UsageDetails = () => {
         .then(resp => {return resp.json()})
         .then(data => {
             if(data.message){
-                setIpList(data.message)
-                console.log("running",data.message)
+                const activeIpList = []
+                data.message.forEach(e => {
+                    if(e.serverStatus) {
+                        activeIpList.push(e)
+                        setIpList([...activeIpList])
+                    }
+                })
+
                 setResp([...data.message])
             }
         })
     },[])
-
-    console.log("ip list is: ",ipList)
+    useEffect(() => {
+        console.log("todate: ", toDate)
+        console.log("from date: ", fromDate)
+    },[fromDate, toDate])
     const handleView = () => {
         const value = !isListView
         setIsListView(value)
@@ -50,24 +60,30 @@ const UsageDetails = () => {
             setSelectedIp([...res])
         }
     }
+    useEffect(() => {
+        console.log("selectedIp: ", selectedIp)
+    },[selectedIp])
+
     const handleSubmit = () => {
+        const d = [formatDate(fromDate),formatDate(toDate),selectedIp]
+        setFilterData({ip:selectedIp})
         setShow(false)
-        fetch('http://localhost:8000/api/usage/cpu',{
-            method:"POST",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            body: JSON.stringify({"ipList": selectedIp, "fromDate": fromDate, "toDate": toDate})
-        })
-        .then(resp => {return resp.json()})
-        .then(data => {
-            if(data.message){
-                setIpList(data.message)
-                console.log("running..",data.message)
-            }
-        })
-        console.log("data is: ", fromDate, toDate, selectedIp)
+        // fetch('http://localhost:8000/api/usage/cpu',{
+        //     method:"POST",
+        //     headers: {
+        //         'Accept': 'application/json',
+        //         'Content-Type': 'application/json'
+        //       },
+        //     body: JSON.stringify({"ipList": selectedIp, "fromDate": fromDate, "toDate": toDate})
+        // })
+        // .then(resp => {return resp.json()})
+        // .then(data => {
+        //     if(data.message){
+        //         setIpList(data.message)
+        //         console.log("running..",data.message)
+        //     }
+        // })
+        // console.log("data is: ", fromDate, toDate, selectedIp)
     }
     const chartList = ["cpu","memory","disk"]
     return(
@@ -108,7 +124,7 @@ const UsageDetails = () => {
                     type="date"
                     id="from"
                     name="from"
-                    value={fromDate}
+                    value={setFilterData.fromDate}
                     onChange={e => {setFromDate(e.target.value)}}
                     style={{width:"70%",marginLeft:"18px"}}
                 />
@@ -116,7 +132,7 @@ const UsageDetails = () => {
                     type="date"
                     id="to"
                     name="to"
-                    value={toDate}
+                    value={setFilterData.toDate}
                     onChange={e => {setToDate(e.target.value)}}
                     style={{width:"70%", marginRight:"12px", marginLeft:"4px"}}
                 />
@@ -128,18 +144,18 @@ const UsageDetails = () => {
                     onClick = {e => handleSubmit()}
                 />
                 </Dropdown.Menu>
-                </Dropdown>
+                </Dropdown >
                 
             </div>
             <div>
                 {
                     !isListView ? (
-                        <Carousel style={{width:"1200px"}}>
+                        <Carousel style={{width:"1200px", padding:"100"}}>
                         {
                             chartList.map(i => {
                                 return (
                                     <Carousel.Item>
-                                        <PrepareChart reportName={i}/>
+                                        <PrepareChart reportName={i} filter={filterData}/>
                                     </Carousel.Item>
                                 )
                             })
@@ -151,7 +167,7 @@ const UsageDetails = () => {
                                 chartList.map(i => {
                                     return(
                                         <div>
-                                            <PrepareChart reportName={i}/>
+                                            <PrepareChart reportName={i} filter={filterData}/>
                                         </div>
                                     )
                                 })
@@ -164,5 +180,11 @@ const UsageDetails = () => {
         </div>
     )
 }
-
+// function format(inputDate) {
+//     var date = new Date(inputDate);
+//     if (!isNaN(date.getTime())) {
+//         // Months use 0 index.
+//         return date.getMonth() + 1 + '/' + date.getDate() + '/' + date.getFullYear();
+//     }
+// }
 export default UsageDetails;

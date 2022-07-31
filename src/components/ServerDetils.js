@@ -111,7 +111,7 @@ const ServerDetails = () => {
         <div>
             <Modal show={showForm} onHide={handleClose}>
                 <Modal.Header closeButton>
-                    <Modal.Title>Server Form</Modal.Title>
+                    <Modal.Title>Add/Edit server</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
@@ -205,7 +205,8 @@ const ServerDetails = () => {
                                     />
                                     <span style={{float:"right"}}>
                                         <MdDelete
-                                        onClick={() => setShowAlert({"ip": data.ip,"show": true})}/>
+                                         onClick={() => setShowAlert({"ip": data.ip,"show": true})}
+                                        />
                                     </span>
                                 </td>
                                 </tr>
