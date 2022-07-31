@@ -2,7 +2,6 @@
 import Form from 'react-bootstrap/Form';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useEffect, useState, useMemo } from 'react';
-import PrepareChart from './Chart';
 import Carousel from 'react-bootstrap/Carousel';
 import { AiOutlineSetting } from 'react-icons/ai';
 import Button from 'react-bootstrap/Button';
@@ -22,6 +21,7 @@ import {
   } from 'chart.js';
   import Skeleton from 'react-loading-skeleton'
   import 'react-loading-skeleton/dist/skeleton.css'
+import isLastDayOfMonth from 'date-fns/isLastDayOfMonth/index';
 
 
   ChartJS.register(
@@ -47,9 +47,7 @@ const UsageDetails = () => {
     const [diskReport,setDiskReport] = useState(null)
     const [memoryReport,setMemoryReport] = useState(null)
 
-    useEffect(() => {
-        console.log("filterData : ", toDate, fromDate)
-    }, [toDate,fromDate])
+    
 
     //const [endDate, setEndDate] = useState(endDate1);
     const [resp, setResp] = useState([])
@@ -122,6 +120,16 @@ const UsageDetails = () => {
         setFilterData({ip:selectedIp})
         setShow(false)
         const listOfIp = ["cpu", "disk", "memory"]
+        let il = [];
+        if(selectedIp.length > 0){
+            selectedIp.forEach(i => {
+                il.push(i)
+            })
+        } else {
+            ipList.forEach(i => {
+                il.push(i.ip)
+            })
+        }
         listOfIp.map(i => {
             fetch(`http://localhost:8000/api/usage/${i}`,{
             method:"POST",
@@ -129,7 +137,7 @@ const UsageDetails = () => {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
             },
-            body: JSON.stringify({"ipList" : selectedIp})
+            body: JSON.stringify({"ipList" : il, "fromDate": formatDate(fromDate) !="Invalid Date" ?formatDate(fromDate) : null, "toDate": formatDate(toDate) !="Invalid Date" ?formatDate(toDate) : null })
             })
             .then(resp => {return resp.json()})
             .then(data => {
@@ -148,9 +156,7 @@ const UsageDetails = () => {
             })
         })
     }
-    // useEffect(() => {
-    //     console.log(".....",selectedIp)
-    // },[selectedIp])
+   
     const reportLabel = {
         cpu : "CPU Usage",
         disk : "Disk Usage",
